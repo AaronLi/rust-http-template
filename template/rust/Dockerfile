@@ -1,6 +1,6 @@
 FROM openfaas/of-watchdog:0.7.2 as watchdog
 
-FROM rust:1.37-alpine as builder
+FROM rust:1.56.1 as builder
 
 WORKDIR /home/rust
 
@@ -8,7 +8,7 @@ WORKDIR /home/rust
 COPY function ./function
 COPY main ./main
 
-RUN cd main && cargo build --target x86_64-unknown-linux-musl --release
+RUN rustup target add aarch64-unknown-linux-musl && cd main && cargo build --target aarch64-unknown-linux-musl --release
 
 FROM alpine:3.11 as runner
 
@@ -23,7 +23,7 @@ COPY --from=watchdog /fwatchdog /usr/bin/fwatchdog
 RUN chmod +x /usr/bin/fwatchdog
 
 # Copy main binary
-COPY --from=builder /home/rust/main/target/x86_64-unknown-linux-musl/release/main /usr/bin/main
+COPY --from=builder /home/rust/main/target/aarch64-unknown-linux-musl/release/main /usr/bin/main
 RUN chmod +x /usr/bin/main
 
 # Set up watchdog for HTTP mode
